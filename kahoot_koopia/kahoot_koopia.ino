@@ -10,40 +10,49 @@
 #endif
 
 ESP8266WiFiMulti WiFiMulti;
-int punaneNuppVajutatud = 0;
+
+int punaneNupp   = 0;
+int rohelineNupp = 0;
+int punaneNuppVajutatud   = 0;
 int rohelineNuppVajutatud = 0;
+
 int question = 0;
 
 void setup() {
-  pinMode(4, INPUT);  // D2 ehk punane
-  pinMode(0, INPUT);  // D3 ehk roheline
-  Serial.begin(115200);
+  Serial.begin(9600);
   WiFi.mode(WIFI_STA);
   WiFiMulti.addAP(STASSID, STAPSK);
-  Serial.println("setup() done connecting to ssid '" STASSID "'");
+
+  pinMode(14, INPUT);  // D5 ehk punane
+  pinMode(12, INPUT);  // D3 ehk roheline
+  pinMode(16, OUTPUT); // D0  ehk punane led
+  pinMode(5, OUTPUT);  // D1 ehk roheline led
 }
 
 void loop() {
-  int punaneNupp = digitalRead(4);
-  int rohelineNupp = digitalRead(0);
+  punaneNupp = digitalRead(14);
+  rohelineNupp = digitalRead(12);
 
-  if(punaneNupp == 0 && punaneNuppVajutatud == 1) {  punaneNuppVajutatud = 0; }
-  if(rohelineNupp == 0 && rohelineNuppVajutatud == 1) {  rohelineNuppVajutatud = 0; }
+  if (punaneNupp == LOW && punaneNuppVajutatud == 1) { punaneNuppVajutatud = 0; }
+  if (rohelineNupp == LOW && rohelineNuppVajutatud == 1) { rohelineNuppVajutatud = 0; }
 
-  if (punaneNupp > 0 && punaneNuppVajutatud != 1) {
+  if (punaneNupp == HIGH && punaneNuppVajutatud == 0) {
     //saadaVastus("1");
     punaneNuppVajutatud = 1;
+    digitalWrite(16, HIGH);
     Serial.print("1");
   }
 
-  if (rohelineNupp > 0 && rohelineNuppVajutatud != 1) {
+  if (rohelineNupp == HIGH && rohelineNuppVajutatud == 0) {
     //saadaVastus("2");
     rohelineNuppVajutatud = 1;
+    digitalWrite(5, HIGH);
     Serial.print("2");
   }
 
-
-
+  delay(500);
+  digitalWrite(5, LOW);
+  digitalWrite(16, LOW);
 }
 
 void saadaVastus(String vastus) {
@@ -52,7 +61,7 @@ void saadaVastus(String vastus) {
     client->setInsecure();
     HTTPClient https;
 
-    if (https.begin(*client, "https://script.google.com/macros/s/AKfycbwTzgGf5GyEz4tHNHJlFAmu4YrHnkpktr-oD-SO0bhDRIOEoHKyhtDWh5V3L5-0_Ny5Fw/exec?lamp="+ vastus)) {  // HTTPS
+    if (https.begin(*client, "https://script.google.com/macros/s/AKfycbwTzgGf5GyEz4tHNHJlFAmu4YrHnkpktr-oD-SO0bhDRIOEoHKyhtDWh5V3L5-0_Ny5Fw/exec?lamp=" + vastus)) {  // HTTPS
       int httpCode = https.GET();
       Serial.println(httpCode);
 
