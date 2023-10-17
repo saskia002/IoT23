@@ -3,7 +3,6 @@
 #include <ESP8266WiFiMulti.h>
 #include <ESP8266HTTPClient.h>
 #include <WiFiClientSecureBearSSL.h>
-#include <ArduinoJson.h>
 
 #ifndef STASSID
 #define STASSID "Saskia"
@@ -17,9 +16,9 @@ int rohelineNupp = 0;
 int punaneNuppVajutatud   = 0;
 int rohelineNuppVajutatud = 0;
 
-int question = 0;
+String macAddr = "";
 
-String baasUrl = "https://script.google.com/macros/s/AKfycbyIPiQi-9SBsJK8Hm2mYo528Ed0A8WE2sD3WPqnYidF9Kzija6ZP5cS97-rB2jG8UEnYw/exec";
+String baasUrl = "https://script.google.com/macros/s/AKfycbxXlIVdFPoFxEnNnYntlZyky0raguYJWBVmIvUfrj5El-1XvFZNaDIUB9K4Zd5XAq3umA/exec";
 String action = "?action=";
 String scriptUrl = baasUrl + action;
 
@@ -35,10 +34,10 @@ void setup() {
   pinMode(5, OUTPUT);  // D1 ehk roheline led
 
   Serial.println("Connected to WiFi Network");
-  String macAddr = WiFi.BSSIDstr();
+  macAddr = WiFi.BSSIDstr();
   Serial.println("Mac addr: " + macAddr);
 
-  saadaPultiMacAddr(macAddr);
+  saadaPultiMacAddr();
 }
 
 void loop() {
@@ -70,7 +69,7 @@ void saadaVastus(String vastus) {
     client->setInsecure();
     https.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
 
-    if (https.begin(*client, scriptUrl + "salvestaNupp&nuppNr=" + vastus)) {
+    if (https.begin(*client, scriptUrl + "salvestaNupp&nuppNr=" + vastus + "&macAddr=" + macAddr)) {
       int httpCode = https.GET();        
       String payload = https.getString();
       Serial.println(payload);
@@ -79,10 +78,12 @@ void saadaVastus(String vastus) {
       if (payload == "false") {
         digitalWrite(5, LOW);
         pulsateLed(16);
-      }
-      if (payload == "true") {
+      } else if (payload == "true") {
         digitalWrite(16, LOW);
         pulsateLed(5);
+      } else if (payload != "true" || payload != "false") {
+        digitalWrite(16, LOW);
+        pulsateTwoLeds(5, 16);
       }
 
     } 
@@ -90,7 +91,7 @@ void saadaVastus(String vastus) {
   }
 }
 
-void saadaPultiMacAddr(String vastus) {
+void saadaPultiMacAddr() {
   if (WiFiMulti.run() == WL_CONNECTED) {
     digitalWrite(5, HIGH);
     digitalWrite(16, HIGH);
@@ -100,7 +101,7 @@ void saadaPultiMacAddr(String vastus) {
     client->setInsecure();
     https.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
 
-    if (https.begin(*client, scriptUrl + "salvestaPult&macAddr=" + vastus)) {
+    if (https.begin(*client, scriptUrl + "salvestaPult&macAddr=" + macAddr)) {
       int httpCode = https.GET();        
       String payload = https.getString();
       Serial.println(payload);
@@ -142,6 +143,34 @@ void easeLed(int ledPin) {
   for (int i=steps; i>=0; i--) {
     bright = i*int(255/steps);
     analogWrite(ledPin, bright);
+    delay(time);
+  }
+}
+
+void pulsateTwoLeds(int ledPin, int ledPin2) {
+    for (int i = 0; i < 4; i++) {
+    easeTwoLeds(ledPin, ledPin2); 
+    delay(125);      
+  }
+}
+
+void easeTwoLeds(int ledPin, int ledPin2) {
+  int bright = 0;
+  int time = 50;
+  int steps = 20;
+
+  for (int i=0; i<=steps; i++) {
+    bright = i*int(255/steps);
+    analogWrite(ledPin, bright);
+    analogWrite(ledPin2, bright);
+    delay(time);
+  }
+
+  bright = 255;
+  for (int i=steps; i>=0; i--) {
+    bright = i*int(255/steps);
+    analogWrite(ledPin, bright);
+    analogWrite(ledPin2, bright);
     delay(time);
   }
 }
