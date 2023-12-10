@@ -12,7 +12,7 @@
 #include <HTTPClient.h>
 #include "image.h"
 
-String baasUrl = "https://script.google.com/macros/s/AKfycbywZJZbit9VvOzuO4mQ61CvJUDeOwPomf46ZWVQJqZh4NDOx5jgk4Gxzcx2a-U9iF-R/exec";
+String baasUrl = "https://script.google.com/macros/s/AKfycbz7SKkblP1c-T4ai_i-GQgsLpUFaKN0q_-ZIMfQzkS3AyTk7LJ2luTmL7sg4V87lsjy/exec";
 String action = "?action=";
 String scriptUrl = baasUrl + action;
 
@@ -25,7 +25,7 @@ String scriptUrl = baasUrl + action;
 #define f2p_jalg 7
 #define f2r_jalg 19
 
-int nr; // img
+int nr;  // img
 
 void logo(int nr) {
   Heltec.display->clear();
@@ -40,7 +40,7 @@ void logo(int nr) {
   if (nr == 8) { Heltec.display->drawXbm(0, 0, 128, 53, (const unsigned char *)img_8); }
   if (nr == 9) { Heltec.display->drawXbm(0, 0, 128, 53, (const unsigned char *)img_9); }
   if (nr == 10) { Heltec.display->drawXbm(0, 0, 128, 53, (const unsigned char *)img_10); }
-  
+
   Heltec.display->display();
 }
 
@@ -91,8 +91,8 @@ void setup() {
 
 
 void loop() {
-  logo(random(1,11));
-  // setFoor();
+  logo(random(1, 11));
+  setFoor();
   getStatusUpdates();
 }
 
@@ -103,49 +103,49 @@ void setFoor() {
 
   // 1.foor 1 stykkel
 
-    // foor2 jalakäia roheliseks
+  // foor2 jalakäia roheliseks
+  digitalWrite(f2r_jalg, HIGH);
+
+  // foor 2 peab olema punane samal ajal
+  digitalWrite(f2p, HIGH);
+
+  digitalWrite(f1r, HIGH);
+  delay(5000);
+  digitalWrite(f1r, LOW);
+
+  for (int i = 0; i < 5; i++) {
+    digitalWrite(f1k, HIGH);
     digitalWrite(f2r_jalg, HIGH);
-
-    // foor 2 peab olema punane samal ajal
-    digitalWrite(f2p, HIGH);
-
-    digitalWrite(f1r, HIGH);
-    delay(5000);
-    digitalWrite(f1r, LOW);
-
-    for (int i=0; i<5; i++) {
-      digitalWrite(f1k, HIGH);
-      digitalWrite(f2r_jalg, HIGH);
-      delay(500);
-      digitalWrite(f1k, LOW);
-      digitalWrite(f2r_jalg, LOW);
-      delay(500);
-    }
-
-    digitalWrite(f1p, HIGH);
-    
-    //jalakäia punaseks
+    delay(500);
+    digitalWrite(f1k, LOW);
     digitalWrite(f2r_jalg, LOW);
-    digitalWrite(f2p_jalg, HIGH);
+    delay(500);
+  }
 
-    delay(5000);
+  digitalWrite(f1p, HIGH);
+
+  //jalakäia punaseks
+  digitalWrite(f2r_jalg, LOW);
+  digitalWrite(f2p_jalg, HIGH);
+
+  delay(5000);
 
   // 2. foor 2 tsykkel
-    digitalWrite(f2p, LOW);
-    digitalWrite(f2r, HIGH);
-    delay(5000);
-    digitalWrite(f2r, LOW);
+  digitalWrite(f2p, LOW);
+  digitalWrite(f2r, HIGH);
+  delay(5000);
+  digitalWrite(f2r, LOW);
 
-    for (int i=0; i<5; i++) {
-      digitalWrite(f2k, HIGH);
-      delay(500);
-      digitalWrite(f2k, LOW);
-      delay(500);
-    }
+  for (int i = 0; i < 5; i++) {
+    digitalWrite(f2k, HIGH);
+    delay(500);
+    digitalWrite(f2k, LOW);
+    delay(500);
+  }
 
-    digitalWrite(f2p_jalg, HIGH);
-    digitalWrite(f2p, HIGH);
-    digitalWrite(f1p, HIGH);
+  digitalWrite(f2p_jalg, HIGH);
+  digitalWrite(f2p, HIGH);
+  digitalWrite(f1p, HIGH);
 }
 
 
@@ -157,6 +157,7 @@ void getStatusUpdates() {
 
   if (https.begin(scriptUrl + "queryUpdates")) {
     int httpCode = https.GET();
+    Serial.println(String(httpCode));
     String payload = https.getString();
     Serial.println(payload);
     https.end();
@@ -169,15 +170,15 @@ void getStatusUpdates() {
     int commaIndex = payload.indexOf(',');
 
     // Extract values
-    String f1 = payload.substring(1, commaIndex-1);
+    String f1 = payload.substring(1, commaIndex - 1);
     payload.remove(0, commaIndex + 1);
 
     commaIndex = payload.indexOf(',');
-    String f2 = payload.substring(1, commaIndex-1);
+    String f2 = payload.substring(1, commaIndex - 1);
     payload.remove(0, commaIndex + 1);
 
     commaIndex = payload.indexOf(',');
-    String f2j = payload.substring(1, commaIndex-1);
+    String f2j = payload.substring(1, commaIndex - 1);
     payload.remove(0, commaIndex + 1);
     int pilt = payload.toInt();
 
@@ -189,88 +190,136 @@ void getStatusUpdates() {
     Heltec.display->clear();
     Heltec.display->drawString(0, 0, "API actions:");
     Heltec.display->drawString(10, 12, "f1: " + f1);
-    Heltec.display->drawString(10, 22, "f2: " + f2 );
+    Heltec.display->drawString(10, 22, "f2: " + f2);
     Heltec.display->drawString(10, 32, "f2_jalg: " + f2j);
     Heltec.display->drawString(10, 42, "pilt: " + String(pilt));
     Heltec.display->display();
-    delay(5000);
 
-    // foor 1 actions
-    if (f1 != "" || f1 != null) {
-      if(f1 == "roheline") {
-        setAllLow();
-        digitalWrite(f2r_jalg, HIGH);
-        digitalWrite(f1r, HIGH);
-        digitalWrite(f2p, HIGH);
-        delay(8000);
-      } else if (f1 == "kollane") {
-        setAllLow();
-        digitalWrite(f2p_jalg, HIGH);
-        digitalWrite(f2p, HIGH);
-        for (int i=0; i<8; i++) {
-          digitalWrite(f1k, HIGH);
-          delay(500);
-          digitalWrite(f1k, LOW);
-          delay(500);
-        }
-      } else if (f1 == "punane") {
-        setAllLow();
-        digitalWrite(f2r_jalg, HIGH);
-        digitalWrite(f1p, HIGH);
-        digitalWrite(f2p, HIGH);
-        delay(8000);
+    if (f1 == "error" || f2 == "error" || f2j == "error") {
+      Heltec.display->clear();
+      Heltec.display->drawString(0, 0, "Fooride Error:");
+      Heltec.display->drawString(10, 12, "Mingi foor läks rikki :(");
+      Heltec.display->display();
+      setAllLow();
+      for (int i = 0; i < 8; i++) {
+        digitalWrite(f1k, HIGH);
+        digitalWrite(f2k, HIGH);
+        delay(500);
+        digitalWrite(f1k, LOW);
+        digitalWrite(f2k, LOW);
+        delay(500);
       }
-    }
+    } else {
 
-    // foor 2 actions
-    if (f2 != "" || f2 != null) {
-      if(f2 == "roheline") {
-        setAllLow();
-        digitalWrite(f2p_jalg, HIGH);
-        digitalWrite(f1p, HIGH);
-        digitalWrite(f2r, HIGH);
-        delay(8000);
-      } else if (f2 == "kollane") {
-        setAllLow();
-        digitalWrite(f2p_jalg, HIGH);
-        digitalWrite(f1p, HIGH);
-        for (int i=0; i<8; i++) {
-          digitalWrite(f2k, HIGH);
-          delay(500);
-          digitalWrite(f2k, LOW);
-          delay(500);
+      // foor 1 actions
+      if (f1 != "") {
+        Heltec.display->clear();
+        Heltec.display->drawString(0, 0, "Foor 1:");
+        if (f1 == "roheline") {
+          Heltec.display->drawString(10, 12, "roheline tsükkel");
+          setAllLow();
+          digitalWrite(f2r_jalg, HIGH);
+          digitalWrite(f1r, HIGH);
+          digitalWrite(f2p, HIGH);
+          Heltec.display->display();
+          delay(8000);
+        } else if (f1 == "kollane") {
+          Heltec.display->drawString(10, 12, "kollane tsükkel");
+          setAllLow();
+          digitalWrite(f2p_jalg, HIGH);
+          digitalWrite(f2p, HIGH);
+          Heltec.display->display();
+          for (int i = 0; i < 10; i++) {
+            digitalWrite(f1k, HIGH);
+            delay(500);
+            digitalWrite(f1k, LOW);
+            delay(500);
+          }
+        } else if (f1 == "punane") {
+          Heltec.display->drawString(10, 12, "punane tsükkel");
+          setAllLow();
+          digitalWrite(f2r_jalg, HIGH);
+          digitalWrite(f1p, HIGH);
+          digitalWrite(f2p, HIGH);
+          Heltec.display->display();
+          delay(8000);
         }
-      } else if (f2 == "punane") {
-        setAllLow();
-        digitalWrite(f2p_jalg, HIGH);
-        digitalWrite(f1p, HIGH);
-        digitalWrite(f2p, HIGH);
-        delay(8000);
       }
-    }
 
-    if (f2j != "" || f2j != null) {
-      if(f2 == "roheline") {
-        setAllLow();
-        digitalWrite(f2p_jalg, LOW);
-        digitalWrite(f2r_jalg, HIGH);
-        digitalWrite(f1p, HIGH);
-        digitalWrite(f2p, HIGH);
-        delay(8000);
-      } else if (f2 == "punane") {
-        setAllLow();
-        digitalWrite(f2p_jalg, HIGH);
-        digitalWrite(f2r_jalg, LOW);
+      // foor 2 actions
+      if (f2 != "") {
+        Heltec.display->clear();
+        Heltec.display->drawString(0, 0, "Foor 2:");
+        if (f2 == "roheline") {
+          Heltec.display->drawString(10, 12, "roheline tsükkel");
+          setAllLow();
+          digitalWrite(f2p_jalg, HIGH);
+          digitalWrite(f1p, HIGH);
+          digitalWrite(f2r, HIGH);
+          Heltec.display->display();
+          delay(8000);
+        } else if (f2 == "kollane") {
+          Heltec.display->drawString(10, 12, "kollane tsükkel");
+          setAllLow();
+          digitalWrite(f2p_jalg, HIGH);
+          digitalWrite(f1p, HIGH);
+          Heltec.display->display();
+          for (int i = 0; i < 8; i++) {
+            digitalWrite(f2k, HIGH);
+            delay(500);
+            digitalWrite(f2k, LOW);
+            delay(500);
+          }
+        } else if (f2 == "punane") {
+          Heltec.display->drawString(10, 12, "punane tsükkel");
+          setAllLow();
+          digitalWrite(f2p_jalg, HIGH);
+          digitalWrite(f1p, HIGH);
+          digitalWrite(f2p, HIGH);
+          Heltec.display->display();
+          delay(8000);
+        }
+      }
 
-        digitalWrite(f1r, HIGH);
-        digitalWrite(f2p, HIGH);
-        delay(8000);
+      if (f2j != "") {
+        Heltec.display->clear();
+        Heltec.display->drawString(0, 0, "Foor 2 jalakäia:");
+        if (f2 == "roheline") {
+          Heltec.display->drawString(10, 12, "roheline tsükkel");
+          setAllLow();
+          digitalWrite(f2p_jalg, LOW);
+          digitalWrite(f2r_jalg, HIGH);
+          digitalWrite(f1p, HIGH);
+          digitalWrite(f2p, HIGH);
+          Heltec.display->display();
+          delay(8000);
+        } else if (f2 == "punane") {
+          Heltec.display->drawString(10, 12, "punane tsükkel");
+          setAllLow();
+          digitalWrite(f2p_jalg, HIGH);
+          digitalWrite(f2r_jalg, LOW);
+
+          digitalWrite(f1r, HIGH);
+          digitalWrite(f2p, HIGH);
+          Heltec.display->display();
+          delay(8000);
+        }
       }
     }
 
     // pilt action
     if (pilt > 0 && pilt <= 10) {
+      setAllLow();
+      digitalWrite(f1p, HIGH);
+      digitalWrite(f2p, HIGH);
+      digitalWrite(f2p_jalg, HIGH);
+
+      Heltec.display->clear();
+      Heltec.display->drawString(0, 0, "Reklaami plakat:");
+      Heltec.display->drawString(10, 12, "Näitan pilti nr: " + String(pilt));
+      delay(1500);
       logo(pilt);
+      Heltec.display->display();
       delay(8000);
     }
 
